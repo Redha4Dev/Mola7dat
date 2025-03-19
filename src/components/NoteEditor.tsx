@@ -11,26 +11,36 @@ import { toast } from "@/hooks/use-toast";
 import TagBadge from './TagBadge';
 
 interface NoteEditorProps {
-  initialNote?: any;
-  onSave: (note: any) => void;
-  onCancel: () => void;
+  initialTitle?: string;
+  initialContent?: string;
+  initialTags?: string[];
+  onSave: (title: string, content: string, tags: string[]) => void;
+  onCancel?: () => void;
+  loading?: boolean;
+  className?: string;
 }
 
-const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave, onCancel }) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+const NoteEditor: React.FC<NoteEditorProps> = ({ 
+  initialTitle = '', 
+  initialContent = '', 
+  initialTags = [], 
+  onSave, 
+  onCancel,
+  loading = false,
+  className
+}) => {
+  const [title, setTitle] = useState(initialTitle);
+  const [content, setContent] = useState(initialContent);
   const [tag, setTag] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(initialTags);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
-  // Initialize editor with note data if editing an existing note
+  // Update state when props change
   useEffect(() => {
-    if (initialNote) {
-      setTitle(initialNote.title || '');
-      setContent(initialNote.content || '');
-      setTags(initialNote.tags || []);
-    }
-  }, [initialNote]);
+    setTitle(initialTitle);
+    setContent(initialContent);
+    setTags(initialTags);
+  }, [initialTitle, initialContent, initialTags]);
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tag.trim()) {
@@ -97,19 +107,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave, onCancel }
       return;
     }
 
-    const noteData = {
-      ...initialNote,
-      title: title.trim(),
-      content,
-      tags,
-      updatedAt: new Date()
-    };
-
-    if (!initialNote) {
-      noteData.createdAt = new Date();
-    }
-
-    onSave(noteData);
+    onSave(title.trim(), content, tags);
   };
 
   // Quill modules and formats
@@ -125,9 +123,9 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave, onCancel }
   };
 
   return (
-    <Card className="w-full">
+    <Card className={className}>
       <CardHeader>
-        <CardTitle>{initialNote ? 'Edit Note' : 'Create New Note'}</CardTitle>
+        <CardTitle>{initialTitle ? 'Edit Note' : 'Create New Note'}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -177,18 +175,20 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave, onCancel }
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </Button>
-          <Button variant="outline" onClick={handleGenerateSummary} disabled={isGeneratingSummary}>
+          {onCancel && (
+            <Button variant="outline" onClick={onCancel}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+          )}
+          <Button variant="outline" onClick={handleGenerateSummary} disabled={isGeneratingSummary || loading}>
             <Wand2 className="mr-2 h-4 w-4" />
             {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
           </Button>
         </div>
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={loading}>
           <Save className="mr-2 h-4 w-4" />
-          Save Note
+          {loading ? 'Saving...' : 'Save Note'}
         </Button>
       </CardFooter>
     </Card>

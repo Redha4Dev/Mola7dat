@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, where, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import NoteCard, { Note } from '@/components/NoteCard';
 import NoteEditor from '@/components/NoteEditor';
@@ -47,8 +47,10 @@ const Dashboard = () => {
           title: data.title || 'Untitled Note',
           content: data.content || '',
           tags: data.tags || [],
-          createdAt: data.createdAt.toDate(),
-          updatedAt: data.updatedAt.toDate()
+          userId: data.userId,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          summary: data.summary
         };
         
         fetchedNotes.push(note);
@@ -80,28 +82,35 @@ const Dashboard = () => {
     if (!currentUser) return;
     
     try {
-      const newNote = {
+      const timestamp = serverTimestamp();
+      const newNoteData = {
         title: 'Untitled Note',
         content: '',
         tags: [],
         userId: currentUser.uid,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
       };
       
-      const docRef = await addDoc(collection(db, 'notes'), newNote);
+      const docRef = await addDoc(collection(db, 'notes'), newNoteData);
       
-      const noteWithId: Note = {
+      // Create a Note object with Firebase timestamp wrappers
+      const newNote: Note = {
         id: docRef.id,
-        title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags,
-        createdAt: newNote.createdAt,
-        updatedAt: newNote.updatedAt,
+        title: newNoteData.title,
+        content: newNoteData.content,
+        tags: newNoteData.tags,
+        userId: newNoteData.userId,
+        createdAt: {
+          toDate: () => new Date()
+        },
+        updatedAt: {
+          toDate: () => new Date()
+        }
       };
       
-      setNotes([noteWithId, ...notes]);
-      selectNote(noteWithId);
+      setNotes([newNote, ...notes]);
+      selectNote(newNote);
       
       toast({
         title: 'Success',
@@ -124,21 +133,24 @@ const Dashboard = () => {
     setIsSaving(true);
     try {
       const noteRef = doc(db, 'notes', selectedNote.id);
-      const updatedAt = new Date();
+      const timestamp = serverTimestamp();
       
       await updateDoc(noteRef, {
         title,
         content,
         tags,
-        updatedAt,
+        updatedAt: timestamp,
       });
       
-      const updatedNote = {
+      // Create a Note object with Firebase timestamp wrapper for updatedAt
+      const updatedNote: Note = {
         ...selectedNote,
         title,
         content,
         tags,
-        updatedAt,
+        updatedAt: {
+          toDate: () => new Date()
+        }
       };
       
       setSelectedNote(updatedNote);
@@ -318,6 +330,7 @@ const Dashboard = () => {
                   key={note.id}
                   note={note}
                   onClick={() => selectNote(note)}
+                  onEdit={(note) => selectNote(note)}
                   onTagClick={toggleTagFilter}
                   onDelete={deleteNote}
                 />
@@ -351,6 +364,7 @@ const Dashboard = () => {
                 initialContent={selectedNote.content}
                 initialTags={selectedNote.tags}
                 onSave={saveNote}
+                onCancel={() => setIsEditorOpen(false)}
                 loading={isSaving}
                 className="flex-1"
               />

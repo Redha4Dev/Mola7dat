@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Pencil, Trash2, Eye } from "lucide-react";
@@ -25,9 +24,11 @@ export interface Note {
 
 interface NoteCardProps {
   note: Note;
-  onEdit: (note: Note) => void;
+  onEdit?: (note: Note) => void;
   onDelete: (id: string) => void;
-  onView: (note: Note) => void;
+  onView?: (note: Note) => void;
+  onClick?: () => void;
+  onTagClick?: (tag: string) => void;
   className?: string;
   layout?: 'grid' | 'list';
 }
@@ -37,6 +38,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onEdit,
   onDelete,
   onView,
+  onClick,
+  onTagClick,
   className,
   layout = 'grid'
 }) => {
@@ -55,7 +58,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const contentPreview = stripHtml(content).substring(0, 120) + (stripHtml(content).length > 120 ? '...' : '');
   
   const handleEdit = () => {
-    onEdit(note);
+    if (onEdit) onEdit(note);
   };
   
   const handleDelete = () => {
@@ -63,15 +66,27 @@ const NoteCard: React.FC<NoteCardProps> = ({
   };
   
   const handleView = () => {
-    onView(note);
+    if (onView) onView(note);
+  };
+
+  const handleCardClick = () => {
+    if (onClick) onClick();
+  };
+
+  const handleTagClick = (tag: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking on tag
+    if (onTagClick) onTagClick(tag);
   };
 
   return (
-    <Card className={cn(
-      'overflow-hidden transition-all duration-200 hover:shadow-md',
-      layout === 'grid' ? 'h-[320px] flex flex-col' : 'flex flex-col md:flex-row',
-      className
-    )}>
+    <Card 
+      className={cn(
+        'overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer',
+        layout === 'grid' ? 'h-[320px] flex flex-col' : 'flex flex-col md:flex-row',
+        className
+      )}
+      onClick={handleCardClick}
+    >
       <div className={cn(
         'flex-1 flex flex-col',
         layout === 'list' && 'md:max-w-[70%]'
@@ -83,7 +98,11 @@ const NoteCard: React.FC<NoteCardProps> = ({
         <CardContent className="p-4 pt-2 flex-1 min-h-0">
           <div className="mb-2 flex flex-wrap gap-1">
             {tags && tags.length > 0 && tags.map((tag, index) => (
-              <TagBadge key={index} tag={tag} />
+              <TagBadge 
+                key={index} 
+                tag={tag} 
+                onClick={(e) => handleTagClick(tag, e)} 
+              />
             ))}
           </div>
           
@@ -101,25 +120,29 @@ const NoteCard: React.FC<NoteCardProps> = ({
               )}
             </div>
             
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={handleView} 
-                aria-label="View note"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={handleEdit} 
-                aria-label="Edit note"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              {onView && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={handleView} 
+                  aria-label="View note"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
+              {onEdit && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={handleEdit} 
+                  aria-label="Edit note"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
               <Button 
                 variant="ghost" 
                 size="icon" 
