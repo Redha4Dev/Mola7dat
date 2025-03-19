@@ -1,166 +1,197 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Save, Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Wand2, Save, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import TagBadge from './TagBadge';
-import { cn } from '@/lib/utils';
 
 interface NoteEditorProps {
-  initialTitle?: string;
-  initialContent?: string;
-  initialTags?: string[];
-  onSave: (title: string, content: string, tags: string[]) => void;
-  className?: string;
-  loading?: boolean;
+  initialNote?: any;
+  onSave: (note: any) => void;
+  onCancel: () => void;
 }
 
-const NoteEditor: React.FC<NoteEditorProps> = ({
-  initialTitle = '',
-  initialContent = '',
-  initialTags = [],
-  onSave,
-  className,
-  loading = false,
-}) => {
-  const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
-  const [tags, setTags] = useState<string[]>(initialTags);
-  const [tagInput, setTagInput] = useState('');
-  const [isDirty, setIsDirty] = useState(false);
+const NoteEditor: React.FC<NoteEditorProps> = ({ initialNote, onSave, onCancel }) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tag, setTag] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
+  // Initialize editor with note data if editing an existing note
   useEffect(() => {
-    setTitle(initialTitle);
-    setContent(initialContent);
-    setTags(initialTags);
-    setIsDirty(false);
-  }, [initialTitle, initialContent, initialTags]);
-
-  const handleContentChange = useCallback((value: string) => {
-    setContent(value);
-    setIsDirty(true);
-  }, []);
-
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    setIsDirty(true);
-  }, []);
-
-  const handleAddTag = useCallback(() => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-      setIsDirty(true);
+    if (initialNote) {
+      setTitle(initialNote.title || '');
+      setContent(initialNote.content || '');
+      setTags(initialNote.tags || []);
     }
-  }, [tagInput, tags]);
+  }, [initialNote]);
 
-  const handleTagInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tag.trim()) {
       e.preventDefault();
-      handleAddTag();
+      if (!tags.includes(tag.trim().toLowerCase())) {
+        setTags([...tags, tag.trim().toLowerCase()]);
+      }
+      setTag('');
     }
-  }, [handleAddTag]);
-
-  const handleRemoveTag = useCallback((tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-    setIsDirty(true);
-  }, [tags]);
-
-  const handleSave = useCallback(() => {
-    onSave(title, content, tags);
-    setIsDirty(false);
-  }, [title, content, tags, onSave]);
-
-  // Quill modules and formats configuration
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link', 'image', 'code-block'],
-      ['clean'],
-    ],
-    clipboard: {
-      matchVisual: false,
-    },
   };
 
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'link', 'image', 'code-block',
-  ];
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!content.trim()) {
+      toast({
+        title: "Error",
+        description: "Please add some content before generating a summary.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+
+    try {
+      // Simulate AI summary generation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Feature not yet implemented",
+        description: "AI summarization will be available soon!",
+      });
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      toast({
+        title: "Summary Generation Failed",
+        description: "Could not generate summary. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      toast({
+        title: "Error",
+        description: "Please add a title for your note.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!content.trim()) {
+      toast({
+        title: "Error",
+        description: "Please add some content to your note.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const noteData = {
+      ...initialNote,
+      title: title.trim(),
+      content,
+      tags,
+      updatedAt: new Date()
+    };
+
+    if (!initialNote) {
+      noteData.createdAt = new Date();
+    }
+
+    onSave(noteData);
+  };
+
+  // Quill modules and formats
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      ['link', 'image', 'code-block'],
+      ['clean']
+    ],
+  };
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
-      <div className="flex items-center justify-between mb-4 sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-3">
-        <Input
-          type="text"
-          placeholder="Note title"
-          value={title}
-          onChange={handleTitleChange}
-          className="text-xl font-medium border-none focus-visible:ring-0 px-0 flex-1 mr-4"
-        />
-        <Button 
-          onClick={handleSave} 
-          disabled={!isDirty || loading}
-          className={cn(
-            "transition-all",
-            isDirty ? "opacity-100" : "opacity-0"
-          )}
-        >
-          <Save className="mr-2 h-4 w-4" />
-          Save
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        {tags.map(tag => (
-          <TagBadge 
-            key={tag} 
-            tag={tag} 
-            removable 
-            onRemove={() => handleRemoveTag(tag)} 
-          />
-        ))}
-        <div className="flex items-center">
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{initialNote ? 'Edit Note' : 'Create New Note'}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
           <Input
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={handleTagInputKeyDown}
-            placeholder="Add tag..."
-            className="h-7 text-xs w-24 mr-1"
+            id="title"
+            placeholder="Note title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-7 w-7" 
-            onClick={handleAddTag}
-            disabled={!tagInput.trim()}
-          >
-            <Plus className="h-3 w-3" />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="content">Content</Label>
+          <div className="min-h-[200px] border rounded-md">
+            <ReactQuill
+              value={content}
+              onChange={setContent}
+              modules={modules}
+              theme="snow"
+              placeholder="Write your note content here..."
+              className="h-[200px] overflow-y-auto"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="tags">Tags</Label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {tags.map((t, i) => (
+              <TagBadge 
+                key={i} 
+                tag={t} 
+                removable 
+                onRemove={() => handleRemoveTag(t)} 
+              />
+            ))}
+          </div>
+          <Input
+            id="tags"
+            placeholder="Add a tag and press Enter"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            onKeyDown={handleAddTag}
+          />
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={onCancel}>
+            <X className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+          <Button variant="outline" onClick={handleGenerateSummary} disabled={isGeneratingSummary}>
+            <Wand2 className="mr-2 h-4 w-4" />
+            {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
           </Button>
         </div>
-      </div>
-
-      <Card className="flex-1 overflow-hidden border">
-        <CardContent className="p-0 h-full">
-          <ReactQuill
-            theme="snow"
-            value={content}
-            onChange={handleContentChange}
-            modules={modules}
-            formats={formats}
-            placeholder="Start writing..."
-            className="h-full overflow-y-auto"
-          />
-        </CardContent>
-      </Card>
-    </div>
+        <Button onClick={handleSave}>
+          <Save className="mr-2 h-4 w-4" />
+          Save Note
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

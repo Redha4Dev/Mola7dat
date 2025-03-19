@@ -11,13 +11,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
-import { lov_add_dependency } from "@lovable.dev/dependencies";
 
-lov_add_dependency("firebase", "10.8.1");
-lov_add_dependency("react-quill", "2.0.0");
-lov_add_dependency("framer-motion", "11.2.3");
-lov_add_dependency("date-fns", "2.30.0");
-
+// Create QueryClient instance
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

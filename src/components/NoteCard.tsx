@@ -1,92 +1,138 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { MoreHorizontal, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { Pencil, Trash2, Eye } from "lucide-react";
 import TagBadge from './TagBadge';
-import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export interface Note {
   id: string;
   title: string;
   content: string;
+  summary?: string;
+  createdAt: {
+    toDate: () => Date;
+  };
+  updatedAt: {
+    toDate: () => Date;
+  };
   tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  userId: string;
 }
 
 interface NoteCardProps {
   note: Note;
-  onClick: (id: string) => void;
+  onEdit: (note: Note) => void;
+  onDelete: (id: string) => void;
+  onView: (note: Note) => void;
   className?: string;
-  onTagClick?: (tag: string) => void;
-  onDelete?: (id: string) => void;
+  layout?: 'grid' | 'list';
 }
 
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
-  onClick,
-  className,
-  onTagClick,
+  onEdit,
   onDelete,
+  onView,
+  className,
+  layout = 'grid'
 }) => {
-  // Strip HTML to get plain text for preview
-  const contentPreview = note.content
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .substring(0, 100);
-
-  const handleTagClick = (tag: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onTagClick) {
-      onTagClick(tag);
-    }
+  const { id, title, content, createdAt, updatedAt, tags } = note;
+  
+  // Format dates
+  const createdDate = createdAt ? format(createdAt.toDate(), 'MMM d, yyyy') : '';
+  const updatedDate = updatedAt ? format(updatedAt.toDate(), 'MMM d, yyyy') : '';
+  
+  // Create a plain text version of content for preview
+  const stripHtml = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  };
+  
+  const contentPreview = stripHtml(content).substring(0, 120) + (stripHtml(content).length > 120 ? '...' : '');
+  
+  const handleEdit = () => {
+    onEdit(note);
+  };
+  
+  const handleDelete = () => {
+    onDelete(id);
+  };
+  
+  const handleView = () => {
+    onView(note);
   };
 
   return (
-    <Card 
-      className={cn(
-        "overflow-hidden transition-all cursor-pointer hover:shadow-md",
-        "hover:translate-y-[-2px] h-full flex flex-col group",
-        className
-      )}
-      onClick={() => onClick(note.id)}
-    >
-      <CardHeader className="p-5 pb-0">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-medium line-clamp-1">
-            {note.title || "Untitled Note"}
-          </CardTitle>
-          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="px-5 py-3 flex-1">
-        <p className="text-sm text-muted-foreground line-clamp-3">
-          {contentPreview || "No content"}
-          {note.content.length > 100 && "..."}
-        </p>
-      </CardContent>
-      <CardFooter className="p-5 pt-0 flex flex-col items-start">
-        <div className="flex flex-wrap gap-1 mb-3">
-          {note.tags.map((tag) => (
-            <TagBadge 
-              key={tag} 
-              tag={tag} 
-              onClick={(e) => handleTagClick(tag, e as any)}
-            />
-          ))}
-        </div>
-        <div className="flex items-center text-xs text-muted-foreground mt-auto">
-          <Clock className="mr-1 h-3 w-3" />
-          <span>
-            {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
-          </span>
-        </div>
-      </CardFooter>
+    <Card className={cn(
+      'overflow-hidden transition-all duration-200 hover:shadow-md',
+      layout === 'grid' ? 'h-[320px] flex flex-col' : 'flex flex-col md:flex-row',
+      className
+    )}>
+      <div className={cn(
+        'flex-1 flex flex-col',
+        layout === 'list' && 'md:max-w-[70%]'
+      )}>
+        <CardHeader className="p-4 pb-2">
+          <CardTitle className="line-clamp-1 text-lg font-semibold">{title}</CardTitle>
+        </CardHeader>
+        
+        <CardContent className="p-4 pt-2 flex-1 min-h-0">
+          <div className="mb-2 flex flex-wrap gap-1">
+            {tags && tags.length > 0 && tags.map((tag, index) => (
+              <TagBadge key={index} tag={tag} />
+            ))}
+          </div>
+          
+          <p className="text-sm text-muted-foreground line-clamp-3 mt-2">
+            {contentPreview}
+          </p>
+        </CardContent>
+        
+        <CardFooter className="p-4 pt-2 flex-shrink-0 text-xs text-muted-foreground">
+          <div className="w-full flex justify-between items-center">
+            <div>
+              Created: {createdDate}
+              {updatedDate !== createdDate && (
+                <span className="ml-2">(Updated: {updatedDate})</span>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={handleView} 
+                aria-label="View note"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={handleEdit} 
+                aria-label="Edit note"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-destructive" 
+                onClick={handleDelete} 
+                aria-label="Delete note"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
+      </div>
     </Card>
   );
 };
