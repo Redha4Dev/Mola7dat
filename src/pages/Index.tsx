@@ -51,7 +51,7 @@ const Index = () => {
         <div className="max-w-5xl mx-auto text-center">
           <AnimatedTransition type="fadeIn">
             <span className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full inline-block mb-4">
-              Introducing Notelio
+              Introducing Mola7dat
             </span>
           </AnimatedTransition>
           
@@ -152,7 +152,7 @@ const Index = () => {
           <AnimatedTransition type="fadeIn">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to transform how you take notes?</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have already discovered the power of Notelio.
+              Join thousands of users who have already discovered the power of Mola7dat.
             </p>
             <Button asChild size="lg" className="rounded-full px-8">
               <Link to={currentUser ? "/dashboard" : "/signup"}>
@@ -168,7 +168,7 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <span className="text-xl font-bold text-primary">Notelio</span>
+              <span className="text-xl font-bold text-primary">Mola7dat</span>
             </div>
             <div className="flex space-x-6">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -183,7 +183,7 @@ const Index = () => {
             </div>
           </div>
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Notelio. All rights reserved.
+            &copy; {new Date().getFullYear()} Mola7dat. All rights reserved. By Khatir Redha
           </div>
         </div>
       </footer>

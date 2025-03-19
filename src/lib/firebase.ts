@@ -5,12 +5,12 @@ import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-auth-domain",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-storage-bucket",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "your-messaging-sender-id",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "your-app-id"
+  apiKey: "AIzaSyBapnMz5juPhEOnbZ6nj-FsZhZirJeXdI0",
+  authDomain: "note-bot-51ab3.firebaseapp.com",
+  projectId: "note-bot-51ab3",
+  storageBucket: "note-bot-51ab3.firebasestorage.app",
+  messagingSenderId: "930060439970",
+  appId: "1:930060439970:web:9e76d6ef45985724c1e2fb"
 };
 
 // Initialize Firebase

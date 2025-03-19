@@ -56,7 +56,7 @@ const Navbar = ({ toggleDarkMode, isDarkMode }: NavbarProps) => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
-          <span className="text-2xl font-bold text-primary">Notelio</span>
+          <span className="text-2xl font-bold text-primary">Mola7dat</span>
         </Link>
 
         {/* Desktop Navigation */}
