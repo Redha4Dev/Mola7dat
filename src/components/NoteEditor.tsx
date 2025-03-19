@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Wand2, Save, X } from "lucide-react";
+import { Wand2, Save, X, Mic2, Mic } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TagBadge from './TagBadge';
 
@@ -34,7 +34,59 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
   const [tag, setTag] = useState('');
   const [tags, setTags] = useState<string[]>(initialTags);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isListening , setIsListening] = useState<boolean>(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const quillRef = useRef<ReactQuill | null>(null);
 
+  useEffect(() => {
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SpeechRecognitionAPI =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const speechRecognition = new SpeechRecognitionAPI();
+  
+      speechRecognition.continuous = false; // Process only one phrase at a time
+      speechRecognition.interimResults = false; // Only process final results
+      speechRecognition.lang = "en-US";
+  
+      speechRecognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        setContent((prevContent) => prevContent + " " + transcript);
+        
+        // Restart recognition after a short delay to allow continuous dictation
+        setTimeout(() => {
+          if (isListening) recognition.start();
+        }, 500);
+      };
+      
+  
+      speechRecognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+  
+      setRecognition(speechRecognition);
+    } else {
+      console.warn("Speech recognition is not supported in this browser.");
+    }
+  }, []);
+  
+  
+
+  const startListening = () => {
+    if (recognition) {
+      setIsListening(true);
+      recognition.start();
+    }
+  };
+  
+  const stopListening = () => {
+    if (recognition) {
+      setIsListening(false);
+      recognition.stop();
+    }
+  };
+  
+  
   // Update state when props change
   useEffect(() => {
     setTitle(initialTitle);
@@ -141,14 +193,15 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
         <div className="space-y-2">
           <Label htmlFor="content">Content</Label>
           <div className="min-h-[200px] border rounded-md">
-            <ReactQuill
-              value={content}
-              onChange={setContent}
-              modules={modules}
-              theme="snow"
-              placeholder="Write your note content here..."
-              className="h-[200px] overflow-y-auto"
-            />
+          <ReactQuill
+            ref={quillRef}
+            value={content}
+            onChange={setContent}
+            modules={modules}
+            theme="snow"
+            placeholder="Write your note content here..."
+            className="h-[200px] overflow-y-auto"
+          />
           </div>
         </div>
         
@@ -184,6 +237,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           <Button variant="outline" onClick={handleGenerateSummary} disabled={isGeneratingSummary || loading}>
             <Wand2 className="mr-2 h-4 w-4" />
             {isGeneratingSummary ? 'Generating...' : 'AI Summary'}
+          </Button>
+          <Button variant="outline" onClick={isListening ? stopListening : startListening}>
+            <Mic className="mr-2 h-4 w-4" />
+            {isListening ? 'Stop Listening' : 'Start Listening'}
           </Button>
         </div>
         <Button onClick={handleSave} disabled={loading}>
