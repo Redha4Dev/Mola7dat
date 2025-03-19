@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppContent = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('notelio-theme');
+      const savedTheme = localStorage.getItem('Mola7dat-theme');
       return savedTheme === 'dark' || 
         (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
@@ -42,10 +42,10 @@ const AppContent = () => {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('notelio-theme', 'dark');
+      localStorage.setItem('Mola7dat-theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('notelio-theme', 'light');
+      localStorage.setItem('Mola7dat-theme', 'light');
     }
   }, [isDarkMode]);
   
