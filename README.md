@@ -1,54 +1,32 @@
-# Welcome to your Lovable project
+# Welcome to Mola7dat
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/cdec0a7b-2611-4bf4-9b00-31b8067bff6e
+**URL**: https://mola7dat.vercel.app/
 
-## How can I edit this code?
+## What is Mola7dat
 
-There are several ways of editing your application.
+A comprehensive platform with all the tools you need to capture, organize and share your ideas.
 
-**Use Lovable**
+**Features**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cdec0a7b-2611-4bf4-9b00-31b8067bff6e) and start prompting.
+## Rich Text Editing
+Create beautifully formatted notes with our intuitive rich text editor.
 
-Changes made via Lovable will be committed automatically to this repo.
+## AI-Powered Summaries ( Still working on it )
+Generate concise summaries of your lengthy notes with just one click.
 
-**Use your preferred IDE**
+## Tagging & Organization
+Categorize and find your notes quickly with a powerful tagging system.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Dark Mode
+Easy on the eyes with a beautiful dark mode that adapts to your preferences.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Voice-to-Text ( Still working on it )
+Capture your thoughts hands-free with accurate speech-to-text conversion.
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Real-Time Collaboration ( Still working on it )
+Work with others seamlessly on shared notes with instant updates.
 
 ## What technologies are used for this project?
 
@@ -60,10 +38,3 @@ This project is built with .
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/cdec0a7b-2611-4bf4-9b00-31b8067bff6e) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
