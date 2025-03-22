@@ -12,8 +12,8 @@ export const SendMessage = async (message: string) => {
             {
                 headers: {
                     Authorization: "Bearer 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",
-                    "HTTP-Referer": "<YOUR_SITE_URL>",
-                    "X-Title": "<YOUR_SITE_NAME>",
+                    "HTTP-Referer": "https://mola7dat.vercel.app/",
+                    "X-Title": "Mola7dat",
                     "Content-Type": "application/json",
                 },
             }
