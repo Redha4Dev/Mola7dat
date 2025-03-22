@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, where, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, where, Timestamp, serverTimestamp, arrayUnion  } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import NoteCard, { Note } from '@/components/NoteCard';
 import NoteEditor from '@/components/NoteEditor';
@@ -23,55 +23,65 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [uniqueTags, setUniqueTags] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
 
   // Fetch notes from Firestore
   const fetchNotes = async () => {
     if (!currentUser) return;
-    
+  
     setIsLoading(true);
     try {
+      console.log("Fetching notes for user:", currentUser.uid);
+  
+      // Query for notes where user is the owner OR a collaborator
       const q = query(
-        collection(db, 'notes'), 
-        where('userId', '==', currentUser.uid),
-        orderBy('updatedAt', 'desc')
+        collection(db, 'notes'),
+        where('collaborators', 'array-contains', currentUser.uid) 
       );
-      
-      const querySnapshot = await getDocs(q);
-      const fetchedNotes: Note[] = [];
-      const tags = new Set<string>();
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const note: Note = {
-          id: doc.id,
-          title: data.title || 'Untitled Note',
-          content: data.content || '',
-          tags: data.tags || [],
-          userId: data.userId,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          summary: data.summary
-        };
-        
-        fetchedNotes.push(note);
-        
-        // Collect unique tags
-        note.tags.forEach(tag => tags.add(tag));
-      });
-      
+      const qOwner = query(
+        collection(db, 'notes'),
+        where('userId', '==', currentUser.uid) 
+      );
+  
+      // Fetch both queries in parallel
+      const [collabSnap, ownerSnap] = await Promise.all([
+        getDocs(q),
+        getDocs(qOwner)
+      ]);
+  
+      const collabNotes = collabSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      const ownerNotes = ownerSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      // Combine and sort by updatedAt (newest first)
+      const fetchedNotes = [...collabNotes, ...ownerNotes].sort(
+        (a, b) => b.updatedAt?.toMillis() - a.updatedAt?.toMillis()
+      );
+  
+      console.log("Fetched notes:", fetchedNotes);
       setNotes(fetchedNotes);
-      setUniqueTags(Array.from(tags));
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      console.error("Error fetching notes:", error.code, error.message);
+      
       toast({
-        title: 'Error',
-        description: 'Failed to fetch notes',
-        variant: 'destructive',
+        title: "Error",
+        description: error.code === "permission-denied"
+          ? "You don't have access to these notes."
+          : "Failed to fetch notes. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
 
   useEffect(() => {
     fetchNotes();
@@ -88,6 +98,7 @@ const Dashboard = () => {
         content: '',
         tags: [],
         userId: currentUser.uid,
+        collaborators: [],
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -246,6 +257,24 @@ const Dashboard = () => {
     return searchMatch && tagsMatch;
   });
 
+
+
+const addCollaborator = async (noteId: string, collaboratorId: string) => {
+  try {
+    const noteRef = doc(db, "notes", noteId);
+    
+    // Only update the collaborators array, NOT the userId
+    await updateDoc(noteRef, {
+      collaborators: arrayUnion(collaboratorId) // Add without replacing
+    });
+
+    console.log("Collaborator added successfully!");
+  } catch (error) {
+    console.error("Error adding collaborator:", error);
+  }
+};
+
+
   return (
     <div className="h-full flex flex-col">
       <main className="flex flex-1 overflow-hidden">
@@ -368,7 +397,13 @@ const Dashboard = () => {
                 loading={isSaving}
                 className="flex-1"
               />
+              <div className='flex flex-col item-center text-center py-3 px-8 rounded-xl my-4 shadow-lg bg-[background] mx-auto gap-3'>
+              <h1>Add collabarator</h1>
+              <Input value={email} placeholder='Enter User id' onChange={(e) => setEmail(e.target.value)}/>
+              <Button onClick={() => addCollaborator(selectedNote.id, email)}>Add</Button>
+              </div>
             </div>
+            
           </AnimatedTransition>
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
@@ -381,6 +416,9 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+        <div className=''>
+          
+        </div>
       </main>
     </div>
   );

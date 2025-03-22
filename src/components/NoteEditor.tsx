@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Wand2, Save, X, Mic2, Mic } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TagBadge from './TagBadge';
+import { SendMessage } from '@/context/api';
 
 interface NoteEditorProps {
   initialTitle?: string;
@@ -110,35 +111,38 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
 
   const handleGenerateSummary = async () => {
     if (!content.trim()) {
-      toast({
-        title: "Error",
-        description: "Please add some content before generating a summary.",
-        variant: "destructive",
-      });
-      return;
+        toast({
+            title: "Error",
+            description: "Please add some content before generating a summary.",
+            variant: "destructive",
+        });
+        return;
     }
 
     setIsGeneratingSummary(true);
 
     try {
-      // Simulate AI summary generation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Feature not yet implemented",
-        description: "AI summarization will be available soon!",
-      });
+        const reply = await SendMessage(content);
+        setContent(reply);
+
+        toast({
+            title: "Summary Generated",
+            description: "Your AI-generated summary is ready!",
+        });
+
     } catch (error) {
-      console.error("Error generating summary:", error);
-      toast({
-        title: "Summary Generation Failed",
-        description: "Could not generate summary. Please try again later.",
-        variant: "destructive",
-      });
+        console.error("Error generating summary:", error);
+
+        toast({
+            title: "Summary Generation Failed",
+            description: "Could not generate summary. Please try again later.",
+            variant: "destructive",
+        });
+
     } finally {
-      setIsGeneratingSummary(false);
+        setIsGeneratingSummary(false);
     }
-  };
+};
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -161,6 +165,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
 
     onSave(title.trim(), content, tags);
   };
+
+  
 
   // Quill modules and formats
   const modules = {
@@ -226,8 +232,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({
           />
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <div className="flex space-x-2">
+      <CardFooter className="flex md:justify-between flex-col md:flex-row items-center md:items-center">
+        <div className="flex md:flex-row flex-col mx-auto my-3 justify-center gap-3  space-x-2">
           {onCancel && (
             <Button variant="outline" onClick={onCancel}>
               <X className="mr-2 h-4 w-4" />

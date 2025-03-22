@@ -19,7 +19,7 @@ export interface Note {
     toDate: () => Date;
   };
   tags: string[];
-  userId: string;
+  userId: string[];
 }
 
 interface NoteCardProps {
